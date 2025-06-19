@@ -1,6 +1,4 @@
-streamlit
-opencv-python-headless
-numpy
-Pillow
+rembg==2.0.55
+Pillow== 11.1.0
+streamlit==1.42.2
 ultralytics
-rembg
