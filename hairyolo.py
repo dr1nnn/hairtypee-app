@@ -163,6 +163,16 @@ def render_beranda():
         """, unsafe_allow_html=True)
 
 # -------------------- PAGE: DETEKSI --------------------
+class VideoProcessor(VideoProcessorBase):
+    def __init__(self):
+        self.model = load_model()
+
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        results = self.model.predict(img, conf=0.5)  # Sesuaikan confidence jika perlu
+        plotted_img = results[0].plot()  # Sudah dalam format BGR
+        return av.VideoFrame.from_ndarray(plotted_img, format="bgr24")
+
 def render_deteksi(model):
     st.markdown("<h1 style='text-align:center;'>DETEKSI TIPE RAMBUT MANUSIA</h1>", unsafe_allow_html=True)
     tab1, tab2 = st.tabs(["Upload Gambar", "Kamera"])
@@ -173,29 +183,26 @@ def render_deteksi(model):
         if uploaded:
             image = Image.open(uploaded).convert("RGB")
             img_np = np.array(image)
-            results = model.predict(img_np, conf=conf/100)
+            results = model.predict(img_np, conf=conf / 100)
             result_img = results[0].plot()
             col1, col2 = st.columns(2)
-            with col1: st.image(image, caption="Gambar Asli", use_container_width=True)
-            with col2: st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
+            with col1:
+                st.image(image, caption="Gambar Asli", use_container_width=True)
+            with col2:
+                st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
 
     with tab2:
-        conf = st.slider("Confidence (%)", 30, 100, 50, key="webrtc_conf")
-
-        class VideoProcessor(VideoProcessorBase):
-            def __init__(self): self.model = model
-            def recv(self, frame):
-                img = frame.to_ndarray(format="bgr24")
-                results = self.model.predict(img, conf=conf/100)
-                img = results[0].plot()
-                return av.VideoFrame.from_ndarray(img, format="bgr24")
+        conf = st.slider("Confidence Kamera (%)", 30, 100, 50)
 
         webrtc_streamer(
             key="example",
             video_processor_factory=VideoProcessor,
-            rtc_configuration=RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}),
+            rtc_configuration=RTCConfiguration(
+                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+            ),
             media_stream_constraints={"video": True, "audio": False}
         )
+        
 # -------------------- PAGE: INFORMASI --------------------
 def render_info():
     st.markdown("<h1 style='text-align:center;'>INFORMASI TIPE RAMBUT</h1>", unsafe_allow_html=True)
