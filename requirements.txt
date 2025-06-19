@@ -1,0 +1,5 @@
+streamlit
+rembg==2.0.66  
+ultralytics
+opencv-python
+Pillow
