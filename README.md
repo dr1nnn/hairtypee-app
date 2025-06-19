@@ -1,60 +1,22 @@
-<<<<<<< HEAD
-# Background Removal App
+# Hairtypee App
 
-A Streamlit application that allows users to upload an image and automatically remove its background using the [rembg](https://github.com/danielgatis/rembg) library.
+A Streamlit-based web application to predict human hair type using YOLOv8.
 
 ## Features
+- Upload image
+- Predict hair type (e.g., straight, wavy, curly, coily)
+- Display prediction result
+- Download processed image
+- Responsive interface with progress indicator
 
-- Upload images (PNG, JPG, JPEG formats supported)
-- Automatic background removal
-- Download the processed image
-- Handles large images with automatic resizing
-- Progress indicators for better user experience
-
-## Getting Started
+## Installation
 
 ### Prerequisites
-
-- Python 3.8+
+- Python 3.9+
 - pip
 
-### Installation
-
-1. Clone the repository
+### Setup
 ```bash
-git clone https://github.com/tyler-simons/BackgroundRemoval.git
-cd BackgroundRemoval
-```
-
-2. Create a virtual environment (optional but recommended)
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies
-```bash
+git clone https://github.com/dr1nnn/hairtypee-app.git
+cd hairtypee-app
 pip install -r requirements.txt
-```
-
-### Running the App
-
-```bash
-streamlit run bg_remove.py
-```
-
-The app will be available at http://localhost:8501 in your web browser.
-
-## Usage Guidelines
-
-- Maximum file size: 10MB
-- Large images will be automatically resized for processing
-- Supported formats: PNG, JPG, JPEG
-
-## License
-
-MIT
-=======
-# hairyolotype-app
-Predict human hair type
->>>>>>> 9e4e9b61096a3abca2078a5f03b9170a94bbd802
