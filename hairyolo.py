@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from PIL import Image
 from ultralytics import YOLO
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+
 
 # -------------------- PAGE CONFIG & CSS --------------------
 def config_page():
@@ -168,98 +170,32 @@ def render_deteksi(model):
     with tab1:
         conf = st.slider("Confidence (%)", 10, 100, 50)
         uploaded = st.file_uploader("Upload Gambar", type=["jpg", "jpeg", "png"])
-
         if uploaded:
             image = Image.open(uploaded).convert("RGB")
             img_np = np.array(image)
             results = model.predict(img_np, conf=conf/100)
             result_img = results[0].plot()
-
-            # Tampilkan Gambar Asli & Hasil Deteksi
             col1, col2 = st.columns(2)
-            with col1:
-                st.image(image, caption="Gambar Asli", use_container_width=True)
-            with col2:
-                st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
-
-            boxes = results[0].boxes
-            if boxes and boxes.cls.numel() > 0:
-                class_ids = boxes.cls.cpu().numpy().astype(int)
-                labels = list(dict.fromkeys([results[0].names[c] for c in class_ids]))
-
-                # Container untuk hasil deteksi
-                st.markdown("""
-                    <div style='border: 3px solid #3399ff; border-radius: 15px; padding: 20px; margin-top: 20px; background-color: #f7f9fd;'>
-                        <h3 style='text-align:center; color:#003366;'>Tipe Rambut Terdeteksi</h3>
-                """, unsafe_allow_html=True)
-
-                # Tampilkan dalam grup kolom 2 per baris
-                for i in range(0, len(labels), 2):
-                    cols = st.columns([1,1])
-                    for j in range(2):
-                        if i + j < len(labels):
-                            label = labels[i + j]
-                            info = get_haircare_info(label)
-                            video_urls = {
-                                "straight": "7287618275112996102",
-                                "wavy": "7497634254172458247",
-                                "curly": "7425542102844476678",
-                                "coily": "7258012818312809774"
-                            }
-                            video_embed = f'<iframe src="https://www.tiktok.com/embed/{video_urls.get(label.lower(), "")}" width="100%" height="530" frameborder="0" allowfullscreen></iframe>'
-
-                            with cols[j]:
-                                st.markdown(f"""
-                                    <div style='background-color:#fff; border-radius:10px; padding:15px; box-shadow: 2px 2px 10px #ccc;'>
-                                        <h4 style='color:#800000;'>Tipe: {label.capitalize()}</h4>
-                                        <p style='margin-bottom:10px; font-size:18px; text-align: justify;'>{info['deskripsi']}</p>
-                                        <p style='margin-bottom:10px; font-size:18px; text-align: justify;'><strong>Tips Perawatan:</strong> {info['perawatan']}</p>
-                                        {video_embed}
-                                    </div>
-                                """, unsafe_allow_html=True)
-
-                st.markdown("</div>", unsafe_allow_html=True)  # Tutup container
-
-            else:
-                st.warning("Tidak ada rambut terdeteksi.")
-
+            with col1: st.image(image, caption="Gambar Asli", use_container_width=True)
+            with col2: st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
 
     with tab2:
-        if 'camera_active' not in st.session_state:
-            st.session_state.camera_active = False
+        conf = st.slider("Confidence (%)", 30, 100, 50, key="webrtc_conf")
 
-        conf = st.slider("Confidence (%)", 30, 100, 50, key="cam_conf")
-        mirror = st.checkbox("Mirror View", value=True)
+        class VideoProcessor(VideoProcessorBase):
+            def __init__(self): self.model = model
+            def recv(self, frame):
+                img = frame.to_ndarray(format="bgr24")
+                results = self.model.predict(img, conf=conf/100)
+                img = results[0].plot()
+                return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-        if not st.session_state.camera_active:
-            if st.button("Buka Kamera"):
-                st.session_state.camera_active = True
-        else:
-            if st.button("Tutup Kamera"):
-                st.session_state.camera_active = False
-
-        cam_window = st.image([])
-
-        if st.session_state.camera_active:
-            cap = cv2.VideoCapture(0)
-            if not cap.isOpened():
-                st.error("Kamera tidak tersedia.")
-            else:
-                while st.session_state.camera_active:
-                    ret, frame = cap.read()
-                    if not ret:
-                        st.error("Berhasil membaca frame.")
-                        break
-
-                    if mirror:
-                        frame = cv2.flip(frame, 1)
-
-                    results = model.predict(frame, conf=conf/100)
-                    frame_out = results[0].plot()
-                    frame_out = cv2.cvtColor(frame_out, cv2.COLOR_BGR2RGB)
-                    cam_window.image(frame_out, channels="RGB", width=1200)
-                cap.release()
-
+        webrtc_streamer(
+            key="example",
+            video_processor_factory=VideoProcessor,
+            rtc_configuration=RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}),
+            media_stream_constraints={"video": True, "audio": False}
+        )
 # -------------------- PAGE: INFORMASI --------------------
 def render_info():
     st.markdown("<h1 style='text-align:center;'>INFORMASI TIPE RAMBUT</h1>", unsafe_allow_html=True)
