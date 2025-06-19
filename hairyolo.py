@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 from ultralytics import YOLO
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+import av
 
 
 # -------------------- PAGE CONFIG & CSS --------------------
