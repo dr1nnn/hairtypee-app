@@ -4,3 +4,4 @@ opencv-python-headless==4.8.1.78
 Pillow==11.1.0
 numpy==1.26.4
 rembg==2.0.55
+streamlit-webrtc==0.45.0
