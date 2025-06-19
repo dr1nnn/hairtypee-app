@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from PIL import Image
 from ultralytics import YOLO
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+import av
 
 # -------------------- PAGE CONFIG & CSS --------------------
 def config_page():
@@ -50,7 +52,7 @@ def config_page():
 # -------------------- MODEL LOADING --------------------
 @st.cache_resource
 def load_model():
-    return YOLO("hair_yolobest.pt")
+    return YOLO("hairbest.pt")
 
 # -------------------- HAIRCARE RECOMMENDATION --------------------
 def get_haircare_info(label):
@@ -103,7 +105,7 @@ def render_footer():
     <div style="text-align: center; padding:10px 0 5px 0; color: red;">
         <p style="margin: 0; font-size: 16px;">&copy; 2025 <strong>Hairtype Detection</strong> — Geldrin Reawaruw</p>
         <p style="margin: 5px 0; font-size: 15px;">
-            <a href="https://github.com/dr1nnn/" target="_blank" style="color: red; text-decoration: none; margin: 0 10px;">GitHub</a> |
+            <a href="https://github.com/" target="_blank" style="color: red; text-decoration: none; margin: 0 10px;">GitHub</a> |
             <a href="https://www.instagram.com/gldrin_reawaruw/" target="_blank" style="color: red; text-decoration: none; margin: 0 10px;">Instagram</a> |
             <a href="https://www.linkedin.com/in/geldrin-reawaruw-545230222/" target="_blank" style="color: red; text-decoration: none; margin: 0 10px;">LinkedIn</a>
         </p>
@@ -113,52 +115,45 @@ def render_footer():
 # -------------------- PAGE: BERANDA --------------------
 def render_beranda():
     st.markdown("<h1 style='text-align:center;'>APLIKASI DETEKSI TIPE RAMBUT MANUSIA</h1>", unsafe_allow_html=True)
-    
     st.markdown("<br><br>", unsafe_allow_html=True)
 
     col_text, col_img = st.columns([2, 0.9])
     with col_text:
         st.markdown("""
-                    <div style='font-size:22px; line-height:1.6; text-align:justify;'>
-                    Aplikasi ini adalah alat berbasis kecerdasan buatan (AI) yang membantu kamu mengetahui jenis rambutmu—lurus, bergelombang, keriting, atau sangat keriting—hanya dengan mengunggah foto. Sistem akan menganalisis bentuk dan tekstur rambutmu secara otomatis, lalu menampilkan hasilnya dalam hitungan detik.  
-                    <br><br>
-                    Mengetahui jenis rambut sangat penting karena setiap tipe rambut membutuhkan perawatan yang berbeda. Dengan aplikasi ini, kamu tidak hanya bisa mengenali jenis rambutmu, tapi juga mendapatkan rekomendasi produk dan cara perawatan yang paling sesuai.
-                    </div>
-                    """, unsafe_allow_html=True)
+            <div style='font-size:20px; line-height:1.6; text-align:justify;'>
+            Aplikasi ini adalah alat berbasis kecerdasan buatan (AI) yang membantu kamu mengetahui jenis rambutmu—lurus, bergelombang, keriting, atau sangat keriting—hanya dengan mengunggah foto. Sistem akan menganalisis bentuk dan tekstur rambutmu secara otomatis, lalu menampilkan hasilnya dalam hitungan detik.  
+            <br><br>
+            Mengetahui jenis rambut sangat penting karena setiap tipe rambut membutuhkan perawatan yang berbeda. Dengan aplikasi ini, kamu tidak hanya bisa mengenali jenis rambutmu, tapi juga mendapatkan rekomendasi produk dan cara perawatan yang paling sesuai.
+            </div>
+        """, unsafe_allow_html=True)
 
     with col_img:
-        st.image("img/samping.jpg", caption="Contoh deteksi rambut", use_container_width=True)
+        st.image("img/samping.jpg", caption="Contoh deteksi rambut", use_column_width=True)
+
+    # Bagian Fitur
+    st.markdown("<h3 style='text-align:center; margin-top:40px;'>FITUR</h3>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
+
     with col1:
-        st.markdown("""
-        <div style='max-width:500px; margin:auto;'>
-            <div style='background-color:#800000; padding:20px; border-radius:15px; box-shadow: 2px 2px 6px #444; color:white;'>
-                <h4 style='text-align:center;'>Manfaat</h4>
-                <ul style='padding-left:22px; font-size:18px; line-height:1; text-align:justify;'>
-                    <li>Mengenali tipe rambut secara otomatis</li>
-                    <li>Mendapatkan tips perawatan yang sesuai</li>
-                    <li>Rekomendasi produk dan tutorial styling</li>
-                    <li>Menghemat waktu uji coba produk rambut</li>
-                </ul>
-            </div>
+        st.markdown(f"""
+        <div style='background-color:#fff; padding:12px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06); text-align:center;'>
+            <img src="https://cdn-icons-png.flaticon.com/512/159/159604.png" width="40" style='margin-bottom:12px;'/>
+            <h5 style='color:#800000; margin-bottom:6px;'>Upload Gambar</h5>
+            <p style='font-size:14px; text-align:justify;'>Kamu bisa mengunggah gambar rambut dari perangkatmu, lalu sistem akan secara otomatis menganalisis bentuk dan tekstur rambut untuk menentukan jenis rambut yang dimiliki.</p>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown("""
-        <div style='max-width:500px; margin:auto;'>
-            <div style='background-color:#800000; padding:20px; border-radius:15px; box-shadow: 2px 2px 6px #444; color:white;'>
-                <h4 style='text-align:center;'>Cara Kerja</h4>
-                <ul style='padding-left:22px; font-size:18px; line-height:1; text-align:justify;'>
-                    <li>Unggah foto atau buka kamera</li>
-                    <li>AI mendeteksi tipe rambut dari gambar</li>
-                    <li>Aplikasi menampilkan hasil dan saran perawatan</li>
-                    <li>Tersedia video tutorial sesuai tipe rambut</li>
-                </ul>
-            </div>
+        st.markdown(f"""
+        <div style='background-color:#fff; padding:12px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.06); text-align:center;'>
+            <img src="https://cdn-icons-png.flaticon.com/512/747/747376.png" width="40" style='margin-bottom:12px;'/>
+            <h5 style='color:#800000; margin-bottom:6px;'>Webcam Real-Time</h5>
+            <p style='font-size:14px; text-align:justify;'>Kamu dapat langsung menggunakan kamera webcam untuk mendeteksi tipe rambut secara real-time tanpa perlu unggah file terlebih dahulu.</p>
         </div>
         """, unsafe_allow_html=True)
+
 
 # -------------------- PAGE: DETEKSI --------------------
 def render_deteksi(model):
@@ -178,9 +173,9 @@ def render_deteksi(model):
             # Tampilkan Gambar Asli & Hasil Deteksi
             col1, col2 = st.columns(2)
             with col1:
-                st.image(image, caption="Gambar Asli", use_container_width=True)
+                st.image(image, caption="Gambar Asli", use_column_width=True)
             with col2:
-                st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
+                st.image(result_img, caption="Hasil Deteksi", use_column_width=True)
 
             boxes = results[0].boxes
             if boxes and boxes.cls.numel() > 0:
@@ -225,40 +220,53 @@ def render_deteksi(model):
 
 
     with tab2:
-        if 'camera_active' not in st.session_state:
-            st.session_state.camera_active = False
+        st.markdown("### Deteksi Kamera Real-Time")
+        conf = st.slider("Confidence Kamera (%)", 10, 100, 50, key="conf_cam")
 
-        conf = st.slider("Confidence (%)", 30, 100, 50, key="cam_conf")
-        mirror = st.checkbox("Mirror View", value=True)
+        # Warna-warna yang akan dipakai bergantian
+        colors = [
+            (0, 255, 0),     # Hijau
+            (0, 0, 255),     # Merah
+            (255, 0, 0),     # Biru
+            (255, 255, 0),   # Kuning
+            (255, 0, 255),   # Ungu
+            (0, 255, 255),   # Cyan
+            (128, 128, 128), # Abu-abu
+            (255, 128, 0),   # Orange
+        ]
 
-        if not st.session_state.camera_active:
-            if st.button("Buka Kamera"):
-                st.session_state.camera_active = True
-        else:
-            if st.button("Tutup Kamera"):
-                st.session_state.camera_active = False
+        from streamlit_webrtc import VideoProcessorBase
 
-        cam_window = st.image([])
+        class HairDetectionProcessor(VideoProcessorBase):
+            def __init__(self):
+                self.model = model
 
-        if st.session_state.camera_active:
-            cap = cv2.VideoCapture(0)
-            if not cap.isOpened():
-                st.error("Kamera tidak tersedia.")
-            else:
-                while st.session_state.camera_active:
-                    ret, frame = cap.read()
-                    if not ret:
-                        st.error("Berhasil membaca frame.")
-                        break
+            def recv(self, frame):
+                img = frame.to_ndarray(format="bgr24")  # dari webcam
+                results = self.model(img, conf=conf / 100)[0]
 
-                    if mirror:
-                        frame = cv2.flip(frame, 1)
+                for i, box in enumerate(results.boxes):
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])
+                    conf_score = float(box.conf[0])
+                    cls = int(box.cls[0])
+                    label = self.model.names[cls]
 
-                    results = model.predict(frame, conf=conf/100)
-                    frame_out = results[0].plot()
-                    frame_out = cv2.cvtColor(frame_out, cv2.COLOR_BGR2RGB)
-                    cam_window.image(frame_out, channels="RGB", width=1200)
-                cap.release()
+                    # Ambil warna unik berdasarkan indeks i
+                    color = colors[i % len(colors)]
+
+                    # Gambar bounding box
+                    cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+                    cv2.putText(img, f"{label} {conf_score:.2f}", (x1, y1 - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+                return av.VideoFrame.from_ndarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), format="rgb24")
+
+        webrtc_streamer(
+            key="hairtype-realtime",
+            video_processor_factory=HairDetectionProcessor,
+            media_stream_constraints={"video": True, "audio": False},
+            async_processing=True,
+        )
 
 # -------------------- PAGE: INFORMASI --------------------
 def render_info():
@@ -274,7 +282,7 @@ def render_info():
     """, unsafe_allow_html=True)
 
     def hair_type_box(title, style_name, image_path, index, description):
-        col1, col2 = st.columns([0.5, 1]) if index % 2 == 0 else st.columns([1, 0.5])
+        col1, col2 = st.columns([1, 1]) if index % 2 == 0 else st.columns([1, 1])
 
         if index % 2 == 0:
             # Gambar kiri, teks kanan
@@ -284,7 +292,7 @@ def render_info():
                 st.markdown(f"""
                     <div style='background-color:#800000; padding:25px; border-radius:15px; 
                                 box-shadow: 2px 2px 6px #444; color:white; margin-bottom:30px; text-align:justify;'>
-                        <h4>{title} <i>({style_name})</i></h4>
+                        <h4 style='color:white;'>{title} <i style='color:white;'>({style_name})</i></h4>
                         <p style='font-size:18px; line-height:1;'>{description}</p>
                     </div>
                 """, unsafe_allow_html=True)
@@ -294,7 +302,7 @@ def render_info():
                 st.markdown(f"""
                     <div style='background-color:#800000; padding:25px; border-radius:15px; 
                                 box-shadow: 2px 2px 6px #444; color:white; margin-bottom:30px; text-align:justify;'>
-                        <h4>{title} <i>({style_name})</i></h4>
+                        <h4 style='color:white;'>{title} <i style='color:white;'>({style_name})</i></h4>
                         <p style='font-size:18px; line-height:1;'>{description}</p>
                     </div>
                 """, unsafe_allow_html=True)
